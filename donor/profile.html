@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Profile | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="donor" data-title="My Profile">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const d = (await BBMS.api('donor', 'profile')).donor;
+  el.innerHTML = `<div class="page-head"><div><h1>My Profile</h1><p>Keep your details up to date</p></div>
+      ${d.eligibleToDonate ? BBMS.badge('Eligible', 'green') : BBMS.badge('Not eligible yet', 'amber')}</div>
+    <div class="grid g2"><form class="card" id="pf"><h3>Personal details</h3>
+      <div class="form-grid">
+        <div class="field"><label>Full name</label><input name="fullName" value="${BBMS.esc(d.fullName)}" required></div>
+        <div class="field"><label>Email</label><input value="${BBMS.esc(d.email)}" disabled></div>
+        <div class="field"><label>Phone</label><input name="phone" value="${BBMS.esc(d.phone)}" required></div>
+        <div class="field"><label>Blood group</label><input value="${BBMS.esc(d.bloodGroup)}" disabled></div>
+        <div class="field"><label>Age</label><input type="number" name="age" min="18" max="65" value="${d.age}"></div>
+        <div class="field"><label>Gender</label><select name="gender">${['Male','Female','Other'].map(g => `<option ${g === d.gender ? 'selected' : ''}>${g}</option>`).join('')}</select></div>
+        <div class="field"><label>Weight (kg)</label><input type="number" step="0.1" min="45" name="weight" value="${d.weight ?? ''}"></div>
+        <div class="field"><label>Street</label><input name="street" value="${BBMS.esc(d.address.street)}"></div>
+        <div class="field"><label>City</label><input name="city" value="${BBMS.esc(d.address.city)}"></div>
+        <div class="field"><label>Province / State</label><input name="state" value="${BBMS.esc(d.address.state)}"></div>
+        <div class="field"><label>Postal code</label><input name="pincode" value="${BBMS.esc(d.address.pincode)}"></div>
+        <div class="field"><label>New password (optional)</label><input type="password" name="password" minlength="6" placeholder="Leave blank to keep current"></div>
+      </div><button class="btn">Save changes</button></form>
+      <div class="card"><h3>Donation summary</h3><dl class="kv">
+        <dt>Total donations</dt><dd>${d.totalDonations}</dd><dt>Last donation</dt><dd>${BBMS.fmtDate(d.lastDonationDate)}</dd>
+        <dt>Next eligible</dt><dd>${d.eligibleToDonate ? 'Now' : BBMS.fmtDate(d.nextEligibleDate)}</dd><dt>Member since</dt><dd>${BBMS.fmtDate(d.createdAt)}</dd></dl></div></div>`;
+  document.getElementById('pf').onsubmit = (e) => { e.preventDefault(); BBMS.run(async () => {
+    const f = Object.fromEntries(new FormData(e.target));
+    const body = { fullName: f.fullName, phone: f.phone, age: f.age, gender: f.gender, weight: f.weight, password: f.password,
+      address: { street: f.street, city: f.city, state: f.state, pincode: f.pincode } };
+    BBMS.toast((await BBMS.api('donor', 'update_profile', { body })).message); e.target.password.value = '';
+  }); };
+});
+</script>
+</body>
+</html>

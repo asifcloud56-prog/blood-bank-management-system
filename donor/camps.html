@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blood Camps | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="donor" data-title="Blood Camps">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let box, status = 'all';
+async function load(page = 1) {
+  const r = await BBMS.api('donor', 'camps', { params: { status, page, limit: 9 } });
+  box.innerHTML = (r.camps.length ? `<div class="grid g3">${r.camps.map(c => `<div class="card">
+      <div class="row between"><h3 style="margin:0">${BBMS.esc(c.title)}</h3>${BBMS.statusBadge(c.status)}</div>
+      <p class="small muted mt">${BBMS.esc(c.description || '')}</p>
+      <dl class="kv mt" style="grid-template-columns:90px 1fr"><dt>Date</dt><dd>${BBMS.fmtDate(c.camp_date)}</dd><dt>Time</dt><dd>${BBMS.esc(c.start_time)} - ${BBMS.esc(c.end_time)}</dd>
+      <dt>Venue</dt><dd>${BBMS.esc(c.venue)}, ${BBMS.esc(c.city)}, ${BBMS.esc(c.state)}</dd><dt>Organizer</dt><dd>${BBMS.esc(c.organizer)}</dd></dl></div>`).join('')}</div>` : `<div class="card">${BBMS.empty('No camps found')}</div>`)
+    + BBMS.pager(r.pagination, 'load');
+}
+window.setStatus = (s) => { status = s; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.s === s)); load(); };
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Blood Camps</h1><p>Find a camp and donate</p></div></div>
+    <div class="tabs">${['all', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'].map(s => `<button class="tab ${s === 'all' ? 'active' : ''}" data-s="${s}" onclick="setStatus('${s}')">${s === 'all' ? 'All' : s}</button>`).join('')}</div><div id="box"></div>`;
+  box = document.getElementById('box'); await load();
+});
+</script>
+</body>
+</html>

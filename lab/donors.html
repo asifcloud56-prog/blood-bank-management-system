@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donors & Donations | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="blood-lab" data-title="Donors & Donations">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+async function loadRecent() {
+  const r = await BBMS.api('lab', 'recent_donations');
+  document.getElementById('rs').innerHTML = `<div class="grid g3">${BBMS.statCard('Today', r.stats.today, 'drop')}${BBMS.statCard('This week', r.stats.thisWeek, 'calendar', 'blue')}${BBMS.statCard('Total', r.stats.total, 'heart', 'green')}</div>`;
+  document.getElementById('recent').innerHTML = BBMS.table(['Donor', 'Group', 'Units', 'Date', 'Remarks'],
+    r.donations.map(d => [BBMS.esc(d.full_name), BBMS.chip(d.blood_group), d.quantity, BBMS.fmtDateTime(d.donation_date), BBMS.esc(d.remarks || '—')]), 'No donations recorded yet');
+}
+let found = [];
+async function search() {
+  const term = document.getElementById('term').value.trim();
+  if (!term) return BBMS.toast('Enter name, email or phone', 'error');
+  BBMS.run(async () => {
+    const r = await BBMS.api('lab', 'donor_search', { params: { term } });
+    found = r.donors;
+    document.getElementById('results').innerHTML = BBMS.table(['Donor', 'Contact', 'Group', 'Last donation', 'Status', ''],
+      r.donors.map(d => [`<b>${BBMS.esc(d.full_name)}</b><div class="small muted">${d.totalDonations} donation(s)</div>`, `${BBMS.esc(d.email)}<div class="small muted">${BBMS.esc(d.phone)}</div>`,
+        BBMS.chip(d.blood_group), BBMS.fmtDate(d.last_donation_date),
+        d.eligible ? BBMS.badge('Eligible', 'green') : BBMS.badge('Eligible ' + BBMS.fmtDate(d.nextEligibleDate), 'amber'),
+        d.eligible ? `<button class="btn sm" onclick="donate(${found.indexOf(d)})">Record donation</button>` : '']), 'No donors found');
+  });
+}
+function donate(i) {
+  const { id, full_name: name, blood_group: group } = found[i];
+  BBMS.modal('Record donation — ' + name,
+    `<div class="form-grid"><div class="field"><label>Blood group</label><select name="bloodGroup">${BBMS.groupOptions(group)}</select></div>
+     <div class="field"><label>Units</label><input type="number" name="quantity" min="1" value="1" required></div></div>
+     <div class="field"><label>Remarks</label><textarea name="remarks"></textarea></div>`,
+    { submitText: 'Save donation', onSubmit: async (f) => {
+      try { BBMS.toast((await BBMS.api('lab', 'donate', { body: { ...f, id } })).message); await Promise.all([search(), loadRecent()]); }
+      catch (e) { BBMS.toast(e.message, 'error'); return false; } } });
+}
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Donors & Donations</h1><p>Search a donor and record a donation — stock updates automatically</p></div></div>
+    <div id="rs"></div>
+    <div class="card mt" style="margin-top:1rem"><h3>Find donor</h3><div class="row"><input id="term" placeholder="Name, email or phone" style="flex:1"><button class="btn" onclick="search()">${BBMS.icon('search')} Search</button></div>
+      <div id="results" class="mt"></div></div>
+    <div class="card mt" style="margin-top:1rem"><h3>Recent donations</h3><div id="recent"></div></div>`;
+  document.getElementById('term').addEventListener('keydown', e => e.key === 'Enter' && search());
+  await loadRecent();
+});
+</script>
+</body>
+</html>

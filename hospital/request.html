@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request Blood | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="hospital" data-title="Request Blood">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const labs = (await BBMS.api('facility', 'labs')).labs;
+  el.innerHTML = `<div class="page-head"><div><h1>Request Blood</h1><p>Send a request to an approved blood lab</p></div></div>
+    <div class="grid g2"><form class="card" id="f"><h3>New request</h3>
+      <div class="field"><label>Blood lab *</label><select name="labId" required id="lab"><option value="">Select a lab</option>${labs.map(l => `<option value="${l.id}">${BBMS.esc(l.name)} — ${BBMS.esc(l.city)}</option>`).join('')}</select></div>
+      <div class="form-grid"><div class="field"><label>Blood group *</label><select name="bloodType" required>${BBMS.groupOptions()}</select></div>
+      <div class="field"><label>Units *</label><input type="number" name="units" min="1" required></div></div>
+      <button class="btn">Send request</button></form>
+      <div class="card"><h3>Available labs (${labs.length})</h3>${labs.length ? labs.map(l => `<div style="padding:.6rem 0;border-bottom:1px solid var(--g-100)"><b>${BBMS.esc(l.name)}</b>
+        <div class="small muted">${BBMS.icon('pin')} ${BBMS.esc(l.street)}, ${BBMS.esc(l.city)} · ${BBMS.icon('phone')} ${BBMS.esc(l.phone)}</div>
+        <div class="small muted">${BBMS.icon('clock')} ${l.is_24x7 == 1 ? 'Open 24x7' : BBMS.esc(l.open_time) + ' - ' + BBMS.esc(l.close_time) + ' (' + BBMS.esc(l.working_days) + ')'}</div></div>`).join('') : BBMS.empty('No approved labs yet')}</div></div>`;
+  document.getElementById('f').onsubmit = (e) => { e.preventDefault(); BBMS.run(async () => {
+    BBMS.toast((await BBMS.api('hospital', 'request', { body: Object.fromEntries(new FormData(e.target)) })).message); e.target.reset();
+  }); };
+});
+</script>
+</body>
+</html>

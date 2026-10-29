@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Overview | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="admin" data-title="Admin Overview">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const d = await BBMS.api('admin', 'dashboard');
+  el.innerHTML = `<div class="page-head"><div><h1>System Overview</h1><p>Everything happening on BBMS</p></div>
+      ${d.pendingFacilities ? `<a class="btn" href="verification.html">${d.pendingFacilities} pending verification</a>` : ''}</div>
+    <div class="grid g4">
+      ${BBMS.statCard('Total donors', d.totalDonors, 'users')}
+      ${BBMS.statCard('Facilities', d.totalFacilities, 'building', 'blue')}
+      ${BBMS.statCard('Pending approval', d.pendingFacilities, 'clock', 'amber')}
+      ${BBMS.statCard('Approved facilities', d.approvedFacilities, 'check', 'green')}
+      ${BBMS.statCard('Total donations', d.totalDonations, 'drop')}
+      ${BBMS.statCard('Eligible donors', d.activeDonors, 'heart', 'green')}
+      ${BBMS.statCard('Upcoming camps', d.upcomingCamps, 'calendar', 'blue')}
+      ${BBMS.statCard('Units in all stocks', d.totalUnits, 'flask', 'amber')}
+    </div>
+    <div class="grid g2 mt" style="margin-top:1rem">
+      <div class="card"><h3>Facility mix</h3><dl class="kv"><dt>Hospitals</dt><dd>${d.hospitals}</dd><dt>Blood labs</dt><dd>${d.labs}</dd><dt>Rejected</dt><dd>${d.rejectedFacilities}</dd></dl></div>
+      <div class="card"><div class="row between"><h3>Waiting for verification</h3><a class="btn ghost sm" href="verification.html">Review</a></div>
+        ${BBMS.table(['Name', 'Type', 'City', 'Applied'], d.recentPending.map(f => [BBMS.esc(f.name), BBMS.badge(f.facility_type, 'blue'), BBMS.esc(f.city), BBMS.fmtDate(f.created_at)]), 'Nothing pending')}</div>
+    </div>`;
+});
+</script>
+</body>
+</html>

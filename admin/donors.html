@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All Donors | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="admin" data-title="All Donors">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let all = [], f = { bg: 'all', q: '' };
+function render() {
+  const rows = all.filter(d => (f.bg === 'all' || d.blood_group === f.bg) && (!f.q || (d.full_name + d.email + d.phone + d.city).toLowerCase().includes(f.q.toLowerCase())));
+  document.getElementById('cnt').textContent = rows.length + ' donor(s)';
+  document.getElementById('box').innerHTML = `<div class="card">${BBMS.table(['Donor', 'Blood', 'Age / Gender', 'Contact', 'City', 'Donations', 'Last donation', 'Status'],
+    rows.map(d => [`<b>${BBMS.esc(d.full_name)}</b><div class="small muted">Joined ${BBMS.fmtDate(d.created_at)}</div>`, BBMS.chip(d.blood_group), `${d.age} / ${BBMS.esc(d.gender)}`,
+      `${BBMS.esc(d.email)}<div class="small muted">${BBMS.esc(d.phone)}</div>`, `${BBMS.esc(d.city)}, ${BBMS.esc(d.state)}`, d.total_donations, BBMS.fmtDate(d.last_donation_date),
+      d.eligible ? BBMS.badge('Eligible', 'green') : BBMS.badge('Cooldown', 'amber')]), 'No donors found')}</div>`;
+}
+BBMS.init(async (user, el) => {
+  all = (await BBMS.api('admin', 'donors')).donors;
+  el.innerHTML = `<div class="page-head"><div><h1>All Donors</h1><p id="cnt"></p></div></div>
+    <div class="card" style="margin-bottom:1rem"><div class="form-grid">
+      <div class="field"><label>Search</label><input placeholder="Name, email, phone, city" oninput="f.q=this.value;render()"></div>
+      <div class="field"><label>Blood group</label><select onchange="f.bg=this.value;render()"><option value="all">All</option>${BBMS.BLOOD_GROUPS.map(g => `<option>${g}</option>`).join('')}</select></div>
+    </div></div><div id="box"></div>`;
+  render();
+});
+</script>
+</body>
+</html>

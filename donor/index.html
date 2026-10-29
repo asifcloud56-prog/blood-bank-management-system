@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donor Dashboard | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="donor" data-title="Donor Dashboard">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const [s, c] = await Promise.all([BBMS.api('donor', 'stats'), BBMS.api('donor', 'camps', { params: { status: 'Upcoming', limit: 3 } })]);
+  const d = s.dashboard;
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Welcome, ${BBMS.esc(user.name)}</h1><p>Thank you for being a lifesaver.</p></div>
+      ${d.eligible ? BBMS.badge('Eligible to donate', 'green') : BBMS.badge(d.eligibilityStatus, 'amber')}</div>
+    <div class="grid g4">
+      ${BBMS.statCard('Total donations', d.totalDonations, 'drop')}
+      ${BBMS.statCard('Blood group', d.bloodGroup, 'heart', 'blue')}
+      ${BBMS.statCard('Last donation', BBMS.fmtDate(d.lastDonationDate), 'history', 'amber')}
+      ${BBMS.statCard('Next eligible', d.eligible ? 'Now' : BBMS.fmtDate(d.nextEligibleDonationDate), 'calendar', 'green')}
+    </div>
+    <div class="grid g2 mt" style="margin-top:1rem">
+      <div class="card"><h3>Eligibility status</h3>
+        <p class="${d.eligible ? 'green' : 'red'} bold">${BBMS.esc(d.eligibilityStatus)}</p>
+        <p class="muted small mt">You can donate again 90 days after your last donation. You must be 18-65 years old and at least 45 kg.</p></div>
+      <div class="card"><div class="row between"><h3>Upcoming blood camps</h3><a class="btn ghost sm" href="camps.html">View all</a></div>
+        ${c.camps.length ? c.camps.map(x => `<div style="padding:.6rem 0;border-bottom:1px solid var(--g-100)"><b>${BBMS.esc(x.title)}</b>
+          <div class="small muted">${BBMS.fmtDate(x.camp_date)} · ${BBMS.esc(x.start_time)}-${BBMS.esc(x.end_time)} · ${BBMS.esc(x.venue)}, ${BBMS.esc(x.city)}</div></div>`).join('') : BBMS.empty('No upcoming camps')}</div>
+    </div>`;
+});
+</script>
+</body>
+</html>

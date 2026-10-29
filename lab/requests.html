@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hospital Requests | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="blood-lab" data-title="Hospital Requests">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let all = [], filter = 'all';
+function render() {
+  const rows = all.filter(r => filter === 'all' || r.status === filter);
+  document.getElementById('box').innerHTML = `<div class="card">${BBMS.table(['Hospital', 'Blood', 'Units', 'Requested', 'Status', 'Action'],
+    rows.map(r => [`<b>${BBMS.esc(r.hospital_name)}</b><div class="small muted">${BBMS.esc(r.hospital_phone)} · ${BBMS.esc(r.hospital_city)}</div>`, BBMS.chip(r.blood_type), r.units, BBMS.fmtDateTime(r.created_at), BBMS.statusBadge(r.status),
+      r.status === 'pending' ? `<button class="btn green sm" onclick="act(${r.id}, 'accept')">Accept</button> <button class="btn outline sm" onclick="act(${r.id}, 'reject')">Reject</button>` : BBMS.fmtDate(r.processed_at)]), 'No requests')}</div>`;
+}
+async function load() { all = (await BBMS.api('lab', 'requests')).requests; render(); }
+function act(id, action) { if (confirm(`${action === 'accept' ? 'Accept' : 'Reject'} this request?`)) BBMS.run(async () => { BBMS.toast((await BBMS.api('lab', 'request_update', { body: { id, action } })).message); load(); }); }
+window.setTab = (s) => { filter = s; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.s === s)); render(); };
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Hospital Requests</h1><p>Accepting a request moves units from your stock to the hospital</p></div></div>
+    <div class="tabs">${['all', 'pending', 'accepted', 'rejected'].map(s => `<button class="tab ${s === 'all' ? 'active' : ''}" data-s="${s}" onclick="setTab('${s}')">${s[0].toUpperCase() + s.slice(1)}</button>`).join('')}</div><div id="box"></div>`;
+  await load();
+});
+</script>
+</body>
+</html>

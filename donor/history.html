@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donation History | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="donor" data-title="Donation History">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let box;
+async function load(page = 1) {
+  const r = await BBMS.api('donor', 'history', { params: { page, limit: 10 } });
+  box.innerHTML = `<div class="card">${BBMS.table(['Date', 'Facility', 'Location', 'Blood group', 'Units', 'Verified', 'Remarks'],
+    r.history.map(h => [BBMS.fmtDate(h.donation_date), BBMS.esc(h.facility), BBMS.esc([h.city, h.state].filter(Boolean).join(', ') || '—'), BBMS.chip(h.blood_group), h.quantity,
+      h.verified == 1 ? BBMS.badge('Verified', 'green') : BBMS.badge('Pending'), BBMS.esc(h.remarks || '—')]), 'You have not donated yet')}
+    ${BBMS.pager(r.pagination, 'load')}</div>`;
+}
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Donation History</h1><p>All donations recorded by blood labs</p></div></div><div id="box"></div>`;
+  box = document.getElementById('box'); await load();
+});
+</script>
+</body>
+</html>

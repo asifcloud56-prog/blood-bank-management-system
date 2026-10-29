@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact | BBMS</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div class="auth-wrap"><div class="auth-card" style="max-width:560px">
+  <h1>Contact us</h1><p class="sub">Questions or feedback? Send us a message.</p>
+  <form id="f">
+    <div class="form-grid"><div class="field"><label>Name</label><input name="name" required></div><div class="field"><label>Email</label><input type="email" name="email" required></div></div>
+    <div class="field"><label>Subject</label><input name="subject"></div>
+    <div class="field"><label>Message</label><textarea name="message" required></textarea></div>
+    <button class="btn block">Send message</button>
+  </form>
+</div></div>
+<div id="site-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+  document.getElementById('f').onsubmit = (e) => { e.preventDefault(); BBMS.run(async () => {
+    const r = await BBMS.api('auth', 'contact', { body: Object.fromEntries(new FormData(e.target)) });
+    BBMS.toast(r.message); e.target.reset(); }); };
+</script>
+</body></html>

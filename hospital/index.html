@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hospital Dashboard | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="hospital" data-title="Hospital Dashboard">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const r = await BBMS.api('hospital', 'dashboard');
+  const s = r.stats;
+  el.innerHTML = `<div class="page-head"><div><h1>${BBMS.esc(r.hospital.name)}</h1><p>${BBMS.esc(r.hospital.city)}, ${BBMS.esc(r.hospital.state)} · Last login ${BBMS.fmtDateTime(r.hospital.last_login)}</p></div>
+      <a class="btn" href="request.html">${BBMS.icon('plus')} Request blood</a></div>
+    <div class="grid g3">
+      ${BBMS.statCard('Units in inventory', s.totalUnits, 'drop')}
+      ${BBMS.statCard('Pending requests', s.pendingRequests, 'clock', 'amber')}
+      ${BBMS.statCard('Total requests', s.totalRequests, 'list', 'blue')}
+    </div>
+    <div class="card mt" style="margin-top:1rem"><h3>Inventory</h3>${BBMS.stockGrid(r.inventory)}</div>
+    <div class="grid g2 mt" style="margin-top:1rem">
+      <div class="card"><div class="row between"><h3>Recent requests</h3><a class="btn ghost sm" href="history.html">All</a></div>
+        ${BBMS.table(['Lab', 'Blood', 'Units', 'Status'], r.recentRequests.map(x => [BBMS.esc(x.lab_name), BBMS.chip(x.blood_type), x.units, BBMS.statusBadge(x.status)]), 'No requests yet')}</div>
+      <div class="card"><h3>Recent activity</h3>${BBMS.historyList(r.history)}</div>
+    </div>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facility Verification | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="admin" data-title="Facility Verification">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let list = [];
+async function load() {
+  list = (await BBMS.api('admin', 'facilities')).facilities.filter(f => f.status === 'pending');
+  document.getElementById('box').innerHTML = list.length ? `<div class="grid g2">${list.map(f => `<div class="card">
+    <div class="row between"><h3 style="margin:0">${BBMS.esc(f.name)}</h3>${BBMS.badge(f.facilityType, 'blue')}</div>
+    <dl class="kv mt" style="grid-template-columns:120px 1fr"><dt>Category</dt><dd>${BBMS.esc(f.facilityCategory)}</dd><dt>Reg. number</dt><dd>${BBMS.esc(f.registrationNumber)}</dd>
+      <dt>Email</dt><dd>${BBMS.esc(f.email)}</dd><dt>Phone</dt><dd>${BBMS.esc(f.phone)}</dd>
+      <dt>Address</dt><dd>${BBMS.esc(f.address.street)}, ${BBMS.esc(f.address.city)}, ${BBMS.esc(f.address.state)} ${BBMS.esc(f.address.pincode)}</dd>
+      <dt>Applied</dt><dd>${BBMS.fmtDate(f.createdAt)}</dd>
+      <dt>Proof</dt><dd><a class="red bold" href="${BBMS.esc(f.registrationProofUrl)}" target="_blank" rel="noopener">Open document</a></dd></dl>
+    <div class="row mt"><button class="btn green" onclick="approve(${f.id})">Approve</button><button class="btn outline" onclick="reject(${f.id})">Reject</button></div></div>`).join('')}</div>`
+    : `<div class="card">${BBMS.empty('No facilities are waiting for verification')}</div>`;
+}
+function approve(id) { if (confirm('Approve this facility?')) BBMS.run(async () => { BBMS.toast((await BBMS.api('admin', 'approve', { body: { id } })).message); load(); }); }
+function reject(id) {
+  BBMS.modal('Reject facility', `<div class="field"><label>Reason (required)</label><textarea name="rejectionReason" required></textarea></div>`,
+    { submitText: 'Reject', onSubmit: async (f) => {
+      try { BBMS.toast((await BBMS.api('admin', 'reject', { body: { id, ...f } })).message); load(); }
+      catch (e) { BBMS.toast(e.message, 'error'); return false; } } });
+}
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Facility Verification</h1><p>Check registration proof, then approve or reject</p></div></div><div id="box"></div>`;
+  await load();
+});
+</script>
+</body>
+</html>

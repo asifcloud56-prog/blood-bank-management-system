@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All Facilities | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="admin" data-title="All Facilities">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let all = [], f = { status: 'all', type: 'all', q: '' };
+function render() {
+  const rows = all.filter(x => (f.status === 'all' || x.status === f.status) && (f.type === 'all' || x.facilityType === f.type)
+    && (!f.q || (x.name + x.email + x.address.city + x.registrationNumber).toLowerCase().includes(f.q.toLowerCase())));
+  document.getElementById('box').innerHTML = `<div class="card">${BBMS.table(['Facility', 'Type', 'Contact', 'City', 'Status', 'Registered', ''],
+    rows.map(x => [`<b>${BBMS.esc(x.name)}</b><div class="small muted">${BBMS.esc(x.registrationNumber)}</div>`, BBMS.badge(x.facilityType, 'blue'),
+      `${BBMS.esc(x.email)}<div class="small muted">${BBMS.esc(x.phone)}</div>`, BBMS.esc(x.address.city),
+      BBMS.statusBadge(x.status) + (x.rejectionReason ? `<div class="small muted">${BBMS.esc(x.rejectionReason)}</div>` : ''), BBMS.fmtDate(x.createdAt),
+      x.status === 'pending' ? `<a class="btn outline sm" href="verification.html">Review</a>` : x.status === 'rejected' ? `<button class="btn outline sm" onclick="approve(${x.id})">Approve</button>` : '']), 'No facilities found')}</div>`;
+}
+function approve(id) { if (confirm('Approve this facility?')) BBMS.run(async () => { BBMS.toast((await BBMS.api('admin', 'approve', { body: { id } })).message); await load(); }); }
+async function load() { all = (await BBMS.api('admin', 'facilities')).facilities; render(); }
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>All Facilities</h1><p>Hospitals and blood labs on the platform</p></div></div>
+    <div class="card" style="margin-bottom:1rem"><div class="form-grid">
+      <div class="field"><label>Search</label><input placeholder="Name, email, city, reg. no." oninput="f.q=this.value;render()"></div>
+      <div class="field"><label>Status</label><select onchange="f.status=this.value;render()"><option value="all">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></div>
+      <div class="field"><label>Type</label><select onchange="f.type=this.value;render()"><option value="all">All</option><option value="hospital">Hospital</option><option value="blood-lab">Blood lab</option></select></div>
+    </div></div><div id="box"></div>`;
+  await load();
+});
+</script>
+</body>
+</html>

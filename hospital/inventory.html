@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hospital Inventory | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="hospital" data-title="Hospital Inventory">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const rows = (await BBMS.api('hospital', 'stock')).data;
+  const total = rows.reduce((a, r) => a + Number(r.quantity), 0);
+  el.innerHTML = `<div class="page-head"><div><h1>Inventory</h1><p>Total in stock: <b>${total} units</b>. Stock arrives when a lab accepts your request.</p></div></div>
+    <div class="card">${BBMS.stockGrid(rows)}</div>
+    <div class="card mt" style="margin-top:1rem"><h3>Details</h3>${BBMS.table(['Blood group', 'Units', 'Expiry', 'Last updated'], rows.map(r => [BBMS.chip(r.blood_group), r.quantity, BBMS.fmtDate(r.expiry_date), BBMS.fmtDateTime(r.updated_at)]), 'No stock yet')}</div>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blood Bank Management System | BBMS</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<section class="hero"><div class="container">
+  <div>
+    <span class="badge red">Every drop counts</span>
+    <h1 style="margin-top:.8rem">Connecting <span>donors</span>, labs and hospitals in real time</h1>
+    <p class="lead">BBMS replaces paper registers with one secure platform: donor records, live blood stock, hospital requests and donation camps — all in one place.</p>
+    <div class="row wrap"><a class="btn" href="register-donor.html">Become a Donor</a><a class="btn outline" href="register-facility.html">Register Hospital / Lab</a></div>
+  </div>
+  <div class="hero-card"><div class="drop"></div><h3 style="font-size:1.2rem">Live platform numbers</h3>
+    <div class="grid" style="grid-template-columns:1fr 1fr;margin-top:1rem" id="stats">
+      <div><div class="bold red" style="font-size:1.8rem" data-k="donors">0</div><div class="small muted">Donors</div></div>
+      <div><div class="bold red" style="font-size:1.8rem" data-k="facilities">0</div><div class="small muted">Facilities</div></div>
+      <div><div class="bold red" style="font-size:1.8rem" data-k="donations">0</div><div class="small muted">Donations</div></div>
+      <div><div class="bold red" style="font-size:1.8rem" data-k="units">0</div><div class="small muted">Units in stock</div></div>
+    </div></div>
+</div></section>
+
+<section class="section alt"><div class="container">
+  <h2>The problem we solve</h2>
+  <p class="sub">Manual blood bank records cause delays exactly when time matters most.</p>
+  <div class="grid g3">
+    <div class="card feat"><div class="ico" id="i1"></div><h3>No live visibility</h3><p>Hospitals can't see which blood group is available without making phone calls.</p></div>
+    <div class="card feat"><div class="ico" id="i2"></div><h3>Slow emergency response</h3><p>Finding an eligible donor with a rare group takes hours on paper.</p></div>
+    <div class="card feat"><div class="ico" id="i3"></div><h3>Data entry errors</h3><p>Scattered registers lead to duplicate and missing donor records.</p></div>
+  </div>
+</div></section>
+
+<section class="section"><div class="container">
+  <h2>Features</h2><p class="sub">One system, four roles.</p>
+  <div class="grid g4">
+    <div class="card feat"><div class="ico" id="f1"></div><h3>Donors</h3><p>Register, track donation history and see when you can donate again.</p></div>
+    <div class="card feat"><div class="ico" id="f2"></div><h3>Blood Labs</h3><p>Manage stock, record donations, organise camps and approve requests.</p></div>
+    <div class="card feat"><div class="ico" id="f3"></div><h3>Hospitals</h3><p>Request blood from labs and search the donor directory.</p></div>
+    <div class="card feat"><div class="ico" id="f4"></div><h3>Admin</h3><p>Verify every hospital and lab before they can use the system.</p></div>
+  </div>
+  <div class="cta mt" style="margin-top:3rem"><h2>Ready to save a life?</h2><p>Join as a donor in under two minutes.</p><a class="btn" href="register-donor.html">Register now</a></div>
+</div></section>
+<div id="site-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+  const set = (id, n) => document.getElementById(id).innerHTML = BBMS.icon(n, 'lg');
+  [['i1','alert'],['i2','clock'],['i3','list'],['f1','heart'],['f2','flask'],['f3','building'],['f4','shield']].forEach(a => set(...a));
+  BBMS.api('auth', 'public_stats').then(d => document.querySelectorAll('#stats [data-k]').forEach(e => e.textContent = d[e.dataset.k])).catch(() => {});
+</script>
+</body></html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab Dashboard | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="blood-lab" data-title="Lab Dashboard">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+BBMS.init(async (user, el) => {
+  const r = await BBMS.api('lab', 'dashboard');
+  const s = r.stats;
+  el.innerHTML = `<div class="page-head"><div><h1>${BBMS.esc(r.facility.name)}</h1><p>${BBMS.esc(r.facility.city)}, ${BBMS.esc(r.facility.state)} · Last login ${BBMS.fmtDateTime(r.facility.last_login)}</p></div>
+      <div class="row"><a class="btn outline" href="donors.html">Record donation</a><a class="btn" href="camps.html">New camp</a></div></div>
+    <div class="grid g4">
+      ${BBMS.statCard('Units in stock', s.totalUnits, 'drop')}
+      ${BBMS.statCard('Pending requests', s.pendingRequests, 'list', 'amber')}
+      ${BBMS.statCard('Total camps', s.totalCamps, 'calendar', 'blue')}
+      ${BBMS.statCard('Camp donors', s.totalDonors, 'users', 'green')}
+    </div>
+    <div class="card mt" style="margin-top:1rem"><h3>Blood stock</h3>${BBMS.stockGrid(r.stock)}</div>
+    <div class="grid g2 mt" style="margin-top:1rem">
+      <div class="card"><div class="row between"><h3>Recent camps</h3><a class="btn ghost sm" href="camps.html">Manage</a></div>
+        ${BBMS.table(['Title', 'Date', 'Status'], r.recentCamps.map(c => [BBMS.esc(c.title), BBMS.fmtDate(c.camp_date), BBMS.statusBadge(c.status)]), 'No camps yet')}</div>
+      <div class="card"><h3>Recent activity</h3>${BBMS.historyList(r.history)}</div>
+    </div>`;
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facility Registration | BBMS</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div class="auth-wrap"><div class="auth-card wide">
+  <h1>Register Hospital / Blood Lab</h1><p class="sub">Your account will be activated after admin verification.</p>
+  <div id="err" class="err-box hidden"></div>
+  <form id="f">
+    <div class="form-section">Facility</div>
+    <div class="form-grid">
+      <div class="field"><label>Facility name <span class="req">*</span></label><input name="name" required></div>
+      <div class="field"><label>Type <span class="req">*</span></label><select name="facilityType" required><option value="">Select</option><option value="hospital">Hospital</option><option value="blood-lab">Blood Lab</option></select></div>
+      <div class="field"><label>Category</label><select name="facilityCategory"><option>Private</option><option>Government</option><option>Trust</option><option>Charity</option><option>Other</option></select></div>
+      <div class="field"><label>Registration number <span class="req">*</span></label><input name="registrationNumber" required></div>
+      <div class="field"><label>Registration proof (document link) <span class="req">*</span></label><input type="url" name="registrationProofUrl" placeholder="https://..." required></div>
+    </div>
+    <div class="form-section">Account & Contact</div>
+    <div class="form-grid">
+      <div class="field"><label>Email <span class="req">*</span></label><input type="email" name="email" required></div>
+      <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" minlength="6" required></div>
+      <div class="field"><label>Phone <span class="req">*</span></label><input type="tel" name="phone" required></div>
+      <div class="field"><label>Emergency contact <span class="req">*</span></label><input type="tel" name="emergencyContact" required></div>
+    </div>
+    <div class="form-section">Address</div>
+    <div class="form-grid">
+      <div class="field"><label>Street <span class="req">*</span></label><input name="street" required></div>
+      <div class="field"><label>City <span class="req">*</span></label><input name="city" required></div>
+      <div class="field"><label>Province / State <span class="req">*</span></label><input name="state" required></div>
+      <div class="field"><label>Postal code <span class="req">*</span></label><input name="pincode" required></div>
+    </div>
+    <div class="form-section">Operating hours</div>
+    <div class="form-grid">
+      <div class="field"><label>Opens</label><input type="time" name="openTime" value="09:00"></div>
+      <div class="field"><label>Closes</label><input type="time" name="closeTime" value="18:00"></div>
+    </div>
+    <div class="field"><label>Working days</label><div class="checks">
+      <label><input type="checkbox" name="workingDays" value="Mon" checked>Mon</label><label><input type="checkbox" name="workingDays" value="Tue" checked>Tue</label>
+      <label><input type="checkbox" name="workingDays" value="Wed" checked>Wed</label><label><input type="checkbox" name="workingDays" value="Thu" checked>Thu</label>
+      <label><input type="checkbox" name="workingDays" value="Fri" checked>Fri</label><label><input type="checkbox" name="workingDays" value="Sat">Sat</label><label><input type="checkbox" name="workingDays" value="Sun">Sun</label></div></div>
+    <div class="checks mb"><label><input type="checkbox" name="is24x7"> Open 24x7</label><label><input type="checkbox" name="emergencyServices"> Emergency services</label></div>
+    <button class="btn block" id="btn">Submit for approval</button>
+  </form>
+  <p class="small muted center mt">Already registered? <a class="red bold" href="login.html">Login</a></p>
+</div></div>
+<div id="site-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('err'), btn = document.getElementById('btn');
+    err.classList.add('hidden'); btn.disabled = true;
+    try {
+      const form = new FormData(e.target), fd = Object.fromEntries(form);
+      fd.workingDays = form.getAll('workingDays'); fd.is24x7 = e.target.is24x7.checked; fd.emergencyServices = e.target.emergencyServices.checked;
+      const r = await BBMS.api('auth', 'register_facility', { body: fd });
+      BBMS.toast(r.message); setTimeout(() => location.href = 'login.html', 1800);
+    } catch (ex) { err.textContent = ex.message; err.classList.remove('hidden'); scrollTo({ top: 0, behavior: 'smooth' }); btn.disabled = false; }
+  };
+</script>
+</body></html>

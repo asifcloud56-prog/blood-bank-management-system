@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donor Directory | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="hospital" data-title="Donor Directory">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let timer;
+function reload() { clearTimeout(timer); timer = setTimeout(() => load(1), 300); }
+async function load(page = 1) {
+  const g = (id) => document.getElementById(id).value;
+  const r = await BBMS.api('hospital', 'donors', { params: { search: g('search'), bloodGroup: g('bg'), city: g('city') || 'all', availability: g('av'), sortBy: g('sort'), page, limit: 15 } });
+  document.getElementById('st').innerHTML = `<div class="grid g3">${BBMS.statCard('Matching donors', r.stats.total, 'users')}${BBMS.statCard('Available now (all)', r.stats.available, 'check', 'green')}${BBMS.statCard('Rare groups (negative)', r.stats.rareBlood, 'heart', 'amber')}</div>`;
+  document.getElementById('list').innerHTML = `<div class="card">${BBMS.table(['Donor', 'Blood', 'Location', 'Last donation', 'Status', 'Contact'],
+    r.donors.map(d => [`<b>${BBMS.esc(d.full_name)}</b><div class="small muted">${d.total_donations} donation(s)</div>`, BBMS.chip(d.blood_group), `${BBMS.esc(d.city)}, ${BBMS.esc(d.state)}`, BBMS.fmtDate(d.last_donation_date),
+      d.eligible ? BBMS.badge('Available', 'green') : BBMS.badge('Eligible ' + BBMS.fmtDate(d.nextEligibleDate), 'amber'),
+      `<a class="btn outline sm" href="tel:${BBMS.esc(d.phone)}" onclick="logContact(${d.id})">${BBMS.icon('phone')} ${BBMS.esc(d.phone)}</a>`]), 'No donors match your filters')}${BBMS.pager(r.pagination, 'load')}</div>`;
+}
+function logContact(id) { BBMS.api('hospital', 'contact_donor', { body: { id } }).catch(() => {}); }
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Donor Directory</h1><p>Find eligible donors by blood group and city</p></div></div><div id="st"></div>
+    <div class="card mt" style="margin:1rem 0"><div class="form-grid">
+      <div class="field"><label>Search</label><input id="search" placeholder="Name, email, phone, city" oninput="reload()"></div>
+      <div class="field"><label>Blood group</label><select id="bg" onchange="reload()"><option value="all">All</option>${BBMS.BLOOD_GROUPS.map(g => `<option>${g}</option>`).join('')}</select></div>
+      <div class="field"><label>City</label><input id="city" placeholder="Any city" oninput="reload()"></div>
+      <div class="field"><label>Availability</label><select id="av" onchange="reload()"><option value="all">All</option><option value="available">Available now</option><option value="soon">Eligible within 30 days</option><option value="unavailable">Not yet eligible</option></select></div>
+      <div class="field"><label>Sort by</label><select id="sort" onchange="reload()"><option value="lastDonation">Last donation</option><option value="name">Name</option><option value="bloodGroup">Blood group</option><option value="city">City</option></select></div>
+    </div></div><div id="list"></div>`;
+  await load();
+});
+</script>
+</body>
+</html>

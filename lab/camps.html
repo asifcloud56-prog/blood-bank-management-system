@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blood Camps | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="blood-lab" data-title="Blood Camps">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let status = 'all', camps = [];
+async function load(page = 1) {
+  const r = await BBMS.api('lab', 'camps', { params: { status, page, limit: 10 } });
+  camps = r.camps;
+  document.getElementById('box').innerHTML = `<div class="card">${BBMS.table(['Camp', 'Date & time', 'Venue', 'Donors (actual/expected)', 'Status', 'Actions'],
+    camps.map(c => [`<b>${BBMS.esc(c.title)}</b>`, `${BBMS.fmtDate(c.camp_date)}<div class="small muted">${BBMS.esc(c.start_time)} - ${BBMS.esc(c.end_time)}</div>`,
+      `${BBMS.esc(c.venue)}<div class="small muted">${BBMS.esc(c.city)}, ${BBMS.esc(c.state)}</div>`, `${c.actual_donors} / ${c.expected_donors}`,
+      `<select onchange="setCampStatus(${c.id}, this.value)">${['Upcoming', 'Ongoing', 'Completed', 'Cancelled'].map(s => `<option ${s === c.status ? 'selected' : ''}>${s}</option>`).join('')}</select>`,
+      `<button class="btn outline sm" onclick="campForm(${c.id})">Edit</button> <button class="btn ghost sm" onclick="delCamp(${c.id})">Delete</button>`]), 'No camps found')}
+    ${BBMS.pager(r.pagination, 'load')}</div>`;
+}
+window.setTab = (s) => { status = s; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.s === s)); load(); };
+function setCampStatus(id, s) { BBMS.run(async () => { BBMS.toast((await BBMS.api('lab', 'camp_status', { body: { id, status: s } })).message); load(); }); }
+function delCamp(id) { if (confirm('Delete this camp?')) BBMS.run(async () => { BBMS.toast((await BBMS.api('lab', 'camp_delete', { body: { id } })).message); load(); }); }
+function campForm(id) {
+  const c = camps.find(x => x.id == id) || {};
+  const v = (k, d = '') => BBMS.esc(c[k] ?? d);
+  BBMS.modal(id ? 'Edit camp' : 'New blood camp',
+    `<div class="field"><label>Title *</label><input name="title" value="${v('title')}" required></div>
+     <div class="field"><label>Description</label><textarea name="description">${v('description')}</textarea></div>
+     <div class="form-grid"><div class="field"><label>Date *</label><input type="date" name="date" value="${v('camp_date')}" required></div>
+       <div class="field"><label>Expected donors</label><input type="number" min="0" name="expectedDonors" value="${v('expected_donors', 0)}"></div>
+       <div class="field"><label>Start time *</label><input type="time" name="startTime" value="${v('start_time')}" required></div>
+       <div class="field"><label>End time *</label><input type="time" name="endTime" value="${v('end_time')}" required></div>
+       <div class="field"><label>Venue *</label><input name="venue" value="${v('venue')}" required></div>
+       <div class="field"><label>City *</label><input name="city" value="${v('city')}" required></div>
+       <div class="field"><label>Province / State *</label><input name="state" value="${v('state')}" required></div>
+       <div class="field"><label>Postal code</label><input name="pincode" value="${v('pincode')}"></div>
+       ${id ? `<div class="field"><label>Actual donors</label><input type="number" min="0" name="actualDonors" value="${v('actual_donors', 0)}"></div>` : ''}</div>`,
+    { submitText: id ? 'Update' : 'Create camp', onSubmit: async (f) => {
+      try { BBMS.toast((await BBMS.api('lab', id ? 'camp_update' : 'camp_create', { body: { ...f, id } })).message); load(); }
+      catch (e) { BBMS.toast(e.message, 'error'); return false; } } });
+}
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Blood Camps</h1><p>Organise and manage donation camps</p></div><button class="btn" onclick="campForm()">${BBMS.icon('plus')} New camp</button></div>
+    <div class="tabs">${['all', 'Upcoming', 'Ongoing', 'Completed', 'Cancelled'].map(s => `<button class="tab ${s === 'all' ? 'active' : ''}" data-s="${s}" onclick="setTab('${s}')">${s === 'all' ? 'All' : s}</button>`).join('')}</div><div id="box"></div>`;
+  await load();
+});
+</script>
+</body>
+</html>

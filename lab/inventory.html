@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blood Inventory | BBMS</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body data-role="blood-lab" data-title="Blood Inventory">
+<div id="app"></div>
+<script src="../assets/js/app.js"></script>
+<script>
+let rows = [];
+async function load() {
+  rows = (await BBMS.api('lab', 'stock')).data;
+  document.getElementById('grid').innerHTML = BBMS.stockGrid(rows);
+  document.getElementById('total').textContent = rows.reduce((a, r) => a + Number(r.quantity), 0) + ' units';
+  const exp = rows.filter(r => (new Date(r.expiry_date) - new Date()) / 864e5 <= 7);
+  document.getElementById('warn').innerHTML = exp.length ? `<div class="err-box">${BBMS.icon('alert')} Expiring within 7 days: ${exp.map(r => r.blood_group).join(', ')}</div>` : '';
+}
+function stockForm(mode) {
+  BBMS.modal(mode === 'add' ? 'Add blood units' : 'Remove blood units',
+    `<div class="field"><label>Blood group</label><select name="bloodType" required>${BBMS.groupOptions()}</select></div>
+     <div class="field"><label>Units</label><input type="number" name="quantity" min="1" required></div>
+     ${mode === 'add' ? `<p class="small muted">Expiry is set automatically to 42 days from today.</p>` : ''}`,
+    { submitText: mode === 'add' ? 'Add' : 'Remove', onSubmit: async (f) => {
+      try { BBMS.toast((await BBMS.api('lab', mode === 'add' ? 'stock_add' : 'stock_remove', { body: f })).message); await load(); }
+      catch (e) { BBMS.toast(e.message, 'error'); return false; } } });
+}
+BBMS.init(async (user, el) => {
+  el.innerHTML = `<div class="page-head"><div><h1>Blood Inventory</h1><p>Total in stock: <b id="total"></b></p></div>
+    <div class="row"><button class="btn green" onclick="stockForm('add')">${BBMS.icon('plus')} Add units</button><button class="btn outline" onclick="stockForm('remove')">Remove units</button></div></div>
+    <div id="warn"></div><div class="card" id="grid"></div>`;
+  await load();
+});
+</script>
+</body>
+</html>

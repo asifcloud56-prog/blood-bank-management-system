@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Donor Registration | BBMS</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div class="auth-wrap"><div class="auth-card wide">
+  <h1>Become a Blood Donor</h1><p class="sub">Fill in your details. You must be 18-65 years old and weigh at least 45 kg.</p>
+  <div id="err" class="err-box hidden"></div>
+  <form id="f">
+    <div class="form-section">Personal</div>
+    <div class="form-grid">
+      <div class="field"><label>Full name <span class="req">*</span></label><input name="fullName" required></div>
+      <div class="field"><label>Email <span class="req">*</span></label><input type="email" name="email" required></div>
+      <div class="field"><label>Password <span class="req">*</span></label><input type="password" name="password" minlength="6" required></div>
+      <div class="field"><label>Phone <span class="req">*</span></label><input type="tel" name="phone" required></div>
+      <div class="field"><label>Emergency contact</label><input type="tel" name="emergencyContact"></div>
+      <div class="field"><label>Date of birth <span class="req">*</span></label><input type="date" name="dob" required></div>
+      <div class="field"><label>Gender <span class="req">*</span></label><select name="gender" required><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select></div>
+      <div class="field"><label>Blood group <span class="req">*</span></label><select name="bloodGroup" required id="bg"></select></div>
+    </div>
+    <div class="form-section">Address</div>
+    <div class="form-grid">
+      <div class="field"><label>Street <span class="req">*</span></label><input name="street" required></div>
+      <div class="field"><label>City <span class="req">*</span></label><input name="city" required></div>
+      <div class="field"><label>Province / State <span class="req">*</span></label><input name="state" required></div>
+      <div class="field"><label>Postal code <span class="req">*</span></label><input name="pincode" required></div>
+    </div>
+    <div class="form-section">Health</div>
+    <div class="form-grid">
+      <div class="field"><label>Weight (kg)</label><input type="number" step="0.1" min="45" name="weight"></div>
+      <div class="field"><label>Height (cm)</label><input type="number" step="0.1" name="height"></div>
+    </div>
+    <div class="checks mb"><label><input type="checkbox" name="hasDiseases" id="hd"> I have a medical condition / disease</label></div>
+    <div class="field hidden" id="dd"><label>Details</label><textarea name="diseaseDetails"></textarea></div>
+    <button class="btn block" id="btn">Create donor account</button>
+  </form>
+  <p class="small muted center mt">Already registered? <a class="red bold" href="login.html">Login</a></p>
+</div></div>
+<div id="site-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+  document.getElementById('bg').innerHTML = BBMS.groupOptions();
+  document.getElementById('hd').onchange = (e) => document.getElementById('dd').classList.toggle('hidden', !e.target.checked);
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('err'), btn = document.getElementById('btn');
+    err.classList.add('hidden'); btn.disabled = true;
+    try {
+      const fd = Object.fromEntries(new FormData(e.target));
+      fd.hasDiseases = e.target.hasDiseases.checked;
+      const r = await BBMS.api('auth', 'register_donor', { body: fd });
+      BBMS.toast(r.message); setTimeout(() => location.href = 'login.html', 1200);
+    } catch (ex) { err.textContent = ex.message; err.classList.remove('hidden'); scrollTo({ top: 0, behavior: 'smooth' }); btn.disabled = false; }
+  };
+</script>
+</body></html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login | BBMS</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div id="site-header"></div>
+<div class="auth-wrap"><div class="auth-card">
+  <div class="logo-mark" style="margin-bottom:1rem"><svg class="icon lg" viewBox="0 0 24 24"><path d="M12 2.7s7 7.3 7 12.3a7 7 0 0 1-14 0c0-5 7-12.3 7-12.3z"/></svg></div>
+  <h1>Welcome back</h1><p class="sub">Login as donor, hospital, blood lab or admin.</p>
+  <div id="err" class="err-box hidden"></div>
+  <form id="f">
+    <div class="field"><label>Email</label><input type="email" name="email" required autofocus></div>
+    <div class="field"><label>Password</label><input type="password" name="password" required></div>
+    <button class="btn block" id="btn">Login</button>
+  </form>
+  <p class="small muted center mt">New here? <a class="red bold" href="register-donor.html">Donor signup</a> · <a class="red bold" href="register-facility.html">Facility signup</a></p>
+</div></div>
+<div id="site-footer"></div>
+<script src="assets/js/app.js"></script>
+<script>
+  document.getElementById('f').onsubmit = async (e) => {
+    e.preventDefault();
+    const err = document.getElementById('err'), btn = document.getElementById('btn');
+    err.classList.add('hidden'); btn.disabled = true; btn.textContent = 'Logging in...';
+    try {
+      const fd = Object.fromEntries(new FormData(e.target));
+      const r = await BBMS.api('auth', 'login', { body: fd });
+      location.href = BBMS.BASE + r.redirect;
+    } catch (ex) { err.textContent = ex.message; err.classList.remove('hidden'); btn.disabled = false; btn.textContent = 'Login'; }
+  };
+</script>
+</body></html>
